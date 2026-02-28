@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>サービス利用規約</title>
+    <style>
+        body {
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            background-color: #f2f4f6;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* --- 規約画面のスタイル --- */
+        #terms-container {
+            background: #fff;
+            max-width: 600px;
+            width: 90%;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .terms-box {
+            height: 300px;
+            overflow-y: scroll;
+            border: 1px solid #dcdfe6;
+            padding: 20px;
+            background: #fafafa;
+            margin: 20px 0;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .btn-submit {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            opacity: 0.2;
+            pointer-events: none;
+            transition: 0.3s;
+        }
+        .btn-submit.active {
+            opacity: 1;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        /* --- 動画オーバーレイのスタイル --- */
+        #video-overlay {
+            display: none; /* 最初は隠しておく */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 9999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        video {
+            max-width: 90%;
+            max-height: 70%;
+            pointer-events: none; /* 操作禁止 */
+        }
+        .progress-container {
+            width: 80%;
+            max-width: 500px;
+            height: 6px;
+            background: #333;
+            margin-top: 20px;
+            border-radius: 3px;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="terms-container">
+        <h1>利用規約の確認</h1>
+        <p style="font-size: 12px; color: red;">※精読のためスクロール速度を制限しています。</p>
+        <div class="terms-box" id="termsBox">
+            <h2>第1条 適用</h2><p>本規約は、本サービスの利用に関する一切の条件を定めるものです。</p>
+            <h2>第2条 視聴義務</h2><p>同意後、提供される特別映像を最後まで視聴する義務を負うものとします。</p>
+            <h2>第3条 不正の禁止</h2><p>再生速度の変更、シーク操作、スクリプトによる回避行為は一切禁止します。</p>
+            <p>...</p><p>...</p><p>（中略：ここに長い文章が入る）</p><p>...</p>
+            <p style="text-align: center; padding: 50px 0;">── 規約の終端 ──</p>
+        </div>
+        <label style="display: block; text-align: center; margin-bottom: 20px;">
+            <input type="checkbox" id="agreeCheck" disabled> 規約に同意します
+        </label>
+        <div id="submitBtn" class="btn-submit">同意してサービスを開始</div>
+    </div>
+
+    <div id="video-overlay">
+        <video id="myVideo" src="video.webm" muted playsinline></video>
+        <div style="color: white; margin-top: 20px;">5秒の広告です...</div>
+        <div class="progress-container">
+            <div class="progress-fill" id="fill"></div>
+        </div>
+    </div>
+
+    <script>
+       // 要素取得
+const termsBox = document.getElementById('termsBox');
+const agreeCheck = document.getElementById('agreeCheck');
+const submitBtn = document.getElementById('submitBtn');
+const overlay = document.getElementById('video-overlay');
+const video = document.getElementById('myVideo');
+const fill = document.getElementById('fill');
+
+// --- 規約画面のロジック ---
+termsBox.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    termsBox.scrollTop += e.deltaY * 0.01;
+}, { passive: false });
+
+termsBox.addEventListener('scroll', () => {
+    if (termsBox.scrollHeight - termsBox.scrollTop <= termsBox.clientHeight + 5) {
+        agreeCheck.disabled = false;
+    }
+});
+
+agreeCheck.addEventListener('change', () => {
+    if (agreeCheck.checked) submitBtn.classList.add('active');
+    else submitBtn.classList.remove('active');
+});
+
+// --- ここに音量増幅のロジックを統合 ---
+submitBtn.addEventListener('click', () => {
+    // 1. 規約を隠して動画を表示
+    document.getElementById('terms-container').style.display = 'none';
+    overlay.style.display = 'flex';
+
+    // 3. 動画再生
+    video.muted = false; 
+    video.play();
+});
+
+// --- 以下、動画ガード（シーク禁止・倍速禁止）はそのまま ---
+let lastTime = 0;
+video.addEventListener('timeupdate', () => {
+    if (video.currentTime > lastTime + 1.2) {
+        video.currentTime = lastTime;
+    } else {
+        lastTime = video.currentTime;
+    }
+    fill.style.width = (video.currentTime / video.duration) * 100 + '%';
+});
+
+video.addEventListener('ratechange', () => {
+    if (video.playbackRate !== 1) {
+        video.playbackRate = 1;
+        video.currentTime = 0;
+        alert("不正な速度変更です。");
+    }
+});
+
+video.addEventListener('ended', () => {
+    window.location.href = 'https://miraiseed3.benesse.ne.jp/seed/start/';
+});
+    </script>
+</body>
+</html>
